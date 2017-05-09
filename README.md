@@ -5,4 +5,4 @@ This script download latest CentOS minimal iso image and generate automate insta
 
 Script need run in privileged user or sudoer user (for mount downloaded iso image)
 
-Password for root - password
+Password for root - password, after install system, please change password for you needs.

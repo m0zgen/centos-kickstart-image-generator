@@ -4,32 +4,65 @@
 #
 PATH=$PATH:/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
 SCRIPT_PATH=$(cd `dirname "${BASH_SOURCE[0]}"` && pwd)
+ME=`basename "$0"`
 
 # Variables
-# ---------------------------------------------------\
+# -------------------------------------------------------------------------------------------\
 CENTOS_RELEASE="7"
 MIRROR=" http://mirror.yandex.ru/centos/$CENTOS_RELEASE/isos/x86_64/"
 MOUNT_ISO_FOLDER="/mnt/iso"
 EXTRACT_ISO_FOLDER="/tmp/centos_custom"
-NEW_IMAGE_NAME="centos-7-custom"
+NEW_IMAGE_NAME="centos-7-custom-minimal"
 
 # Colors
 RED="\033[0;31m"
 GREEN="\033[0;32m"
 CLS='\033[0m'
 
-# Get Minimal iso name
-echo -e "${GREEN}Get ISO image from mirror - $MIRROR${CLS}"
-DOWNLOAD_ISO=`curl -s $MIRROR | grep -i "minimal.*.iso" | grep -Po '(?<=href=")[^"]*(?=")'`
+# Info
+# -------------------------------------------------------------------------------------------\
+USAGE="
+USAGE:
+    sudo ./$ME
+    sudo ./$ME --move-iso ~/Downloads/iso/
+"
+HELP="You can use script with arguments
 
-# Download iso
+OPTIONS:
+    --help          This help
+    --copy-iso      Copy generated ISO to your destination (for example: VirtualBox or KVM iso folder)
+    --move-iso      Move generated ISO to your destination
+"
+
+# Functions
+# -------------------------------------------------------------------------------------------\
+# Copy ISO
+copy-iso(){
+  echo "Copy ISO to $1"
+  cp $SCRIPT_PATH/images/$NEW_IMAGE_NAME.iso $1
+}
+
+# Move ISO
+move-iso(){
+  echo "Move ISO to $1"
+  mv $SCRIPT_PATH/images/$NEW_IMAGE_NAME.iso $1
+}
+
+# Function download with Wget
 download_image()
 {
   echo -e "${GREEN}Download image - $DOWNLOAD_ISO${CLS}"
   wget $MIRROR$DOWNLOAD_ISO -P $SCRIPT_PATH/images
 }
 
+# Let's Begin
+# -------------------------------------------------------------------------------------------\
+# Get Minimal iso name
+echo -e "${GREEN}Get ISO image from mirror - $MIRROR${CLS}"
+DOWNLOAD_ISO=`curl -s $MIRROR | grep -i "minimal.*.iso" | grep -Po '(?<=href=")[^"]*(?=")'`
 
+# Check folder and downloaded ISO exist
+# -------------------------------------------------------------------------------------------\
 if [[ ! -d $SCRIPT_PATH/images ]]; then
   mkdir $SCRIPT_PATH/images
   download_image
@@ -42,7 +75,8 @@ else
   fi
 fi
 
-# Create mount folder for downloaded image
+# Check mount, extract ISO folders
+# -------------------------------------------------------------------------------------------\
 if [[ ! -d $MOUNT_ISO_FOLDER ]]; then
   mkdir $MOUNT_ISO_FOLDER
 fi
@@ -52,12 +86,15 @@ if [[ ! -d $EXTRACT_ISO_FOLDER ]]; then
 fi
 
 # Mount image and extract
+# -------------------------------------------------------------------------------------------\
 mount $SCRIPT_PATH/images/$DOWNLOAD_ISO $MOUNT_ISO_FOLDER
 cp -rp $MOUNT_ISO_FOLDER/* $EXTRACT_ISO_FOLDER
 
 # Copy config to extract iso folder
 cp $SCRIPT_PATH/configs/ks.cfg $EXTRACT_ISO_FOLDER
 
+# Boot menu changes
+# -------------------------------------------------------------------------------------------\
 # Change default menu to Auto menu
 sed -i '/menu default/d' $EXTRACT_ISO_FOLDER/isolinux/isolinux.cfg
 
@@ -70,14 +107,48 @@ label auto \
   # end' $EXTRACT_ISO_FOLDER/isolinux/isolinux.cfg
 
 # Make new image
+# -------------------------------------------------------------------------------------------\
 echo -e "${GREEN}Generate iso${CLS}"
 mkisofs -o $SCRIPT_PATH/images/$NEW_IMAGE_NAME.iso -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -V '$NEW_IMAGE_NAME' -boot-load-size 4 -boot-info-table -R -J -v -T $EXTRACT_ISO_FOLDER
 
-
 # Post action
+# -------------------------------------------------------------------------------------------\
 echo -e "${GREEN}Umount $MOUNT_ISO_FOLDER${CLS}"
 umount $MOUNT_ISO_FOLDER
 echo -e "${GREEN}Delete $EXTRACT_ISO_FOLDER${CLS}"
 rm -rf $EXTRACT_ISO_FOLDER
 
 echo -e "${RED}Done!${CLS} ${GREEN}New autoimage destination - $SCRIPT_PATH/images/$NEW_IMAGE_NAME.iso${CLS}"
+
+# Params
+while test $# -gt 0
+do
+    case "$1" in
+        --help)
+              echo -e "$USAGE"
+              echo -e "$HELP"
+              exit
+            ;;
+        --copy-iso)
+              if [[ -z $2 ]]; then
+                echo "Argument is empty"
+              else
+                copy-iso $2
+              fi
+            ;;
+        --move-iso)
+              if [[ -z $2 ]]; then
+                echo "Argument is empty"
+              else
+                move-iso $2
+              fi
+            ;;
+        #--*) echo "bad option $1"
+        #    ;;
+        #*) echo "argument $1"
+        #    ;;
+    esac
+    shift
+done
+
+exit 0
