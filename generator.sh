@@ -14,6 +14,7 @@ EXTRACT_ISO_FOLDER="/tmp/centos_custom"
 NEW_IMAGE_NAME="centos-7-custom"
 
 # Colors
+RED="\033[0;31m"
 GREEN="\033[0;32m"
 CLS='\033[0m'
 
@@ -79,4 +80,4 @@ umount $MOUNT_ISO_FOLDER
 echo -e "${GREEN}Delete $EXTRACT_ISO_FOLDER${CLS}"
 rm -rf $EXTRACT_ISO_FOLDER
 
-echo -e "${GREEN}Done! New autoimage destination - $SCRIPT_PATH/images/$NEW_IMAGE_NAME.iso${CLS}"
+echo -e "${RED}Done!${CLS} ${GREEN}New autoimage destination - $SCRIPT_PATH/images/$NEW_IMAGE_NAME.iso${CLS}"
