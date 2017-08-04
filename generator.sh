@@ -1,5 +1,5 @@
 #!/bin/bash
-# Author: Yevgeniy Goncharov aka xck, http://sys-admin.k
+# Author: Yevgeniy Goncharov aka xck, http://sys-adm.in
 # Script for generate kickstart CentOS image
 #
 PATH=$PATH:/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
