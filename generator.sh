@@ -6,7 +6,7 @@ PATH=$PATH:/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
 SCRIPT_PATH=$(cd `dirname "${BASH_SOURCE[0]}"` && pwd)
 ME=`basename "$0"`
 
-# Variables
+# Variables for ISO download 
 # -------------------------------------------------------------------------------------------\
 CENTOS_RELEASE="7"
 MIRROR=" http://mirror.yandex.ru/centos/$CENTOS_RELEASE/isos/x86_64/"
@@ -33,6 +33,24 @@ OPTIONS:
     --copy-iso      Copy generated ISO to your destination (for example: VirtualBox or KVM iso folder)
     --move-iso      Move generated ISO to your destination
 "
+
+# Determine OS
+if [[ -e /etc/debian_version ]]; then
+	OS="debian"
+	ISOPACKAGE="genisoimage"
+	echo "This distro is $OS"
+elif [[ -e /etc/fedora-release ]]; then
+	OS="fedora"
+	ISOPACKAGE="mkisofs"
+	echo "This distro is $OS"
+elif [[ -e /etc/centos-release || -e /etc/redhat-release || -e /etc/system-release ]]; then
+	OS="centos"
+	ISOPACKAGE="mkisofs"
+	echo "This distro is $OS"
+else
+	echo "This OS no supported by this script. Sorry. Supported distro: Debian, CentOS, Fedora"
+	exit 4
+fi
 
 # Functions
 # -------------------------------------------------------------------------------------------\
@@ -109,7 +127,8 @@ label auto \
 # Make new image
 # -------------------------------------------------------------------------------------------\
 echo -e "${GREEN}Generate iso${CLS}"
-mkisofs -o $SCRIPT_PATH/images/$NEW_IMAGE_NAME.iso -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -V '$NEW_IMAGE_NAME' -boot-load-size 4 -boot-info-table -R -J -v -T $EXTRACT_ISO_FOLDER
+# mkisofs -o $SCRIPT_PATH/images/$NEW_IMAGE_NAME.iso -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -V '$NEW_IMAGE_NAME' -boot-load-size 4 -boot-info-table -R -J -v -T $EXTRACT_ISO_FOLDER
+genisoimage -o $SCRIPT_PATH/images/$NEW_IMAGE_NAME.iso -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -V '$NEW_IMAGE_NAME' -boot-load-size 4 -boot-info-table -R -J -v -T $EXTRACT_ISO_FOLDER
 
 # Post action
 # -------------------------------------------------------------------------------------------\
