@@ -127,6 +127,29 @@ label auto \
 # Make new image
 # -------------------------------------------------------------------------------------------\
 echo -e "${GREEN}Generate iso${CLS}"
+
+if [[ $OS = "centos" ]]; then
+  echo "CentOS Detected..."
+  # Check ind install $ISOPACKAGE
+  if ! rpm -qa | grep -q $ISOPACKAGE; then
+    yum install $ISOPACKAGE -y
+  fi
+fi
+
+if [[ $OS = "fedora" ]]; then
+  echo "Fedora Detected..."
+  # Check ind install $ISOPACKAGE
+  if ! rpm -qa | grep -q $ISOPACKAGE; then
+    dnf install $ISOPACKAGE -y
+  fi
+fi
+
+if [[ $OS = "debian" ]]; then
+  echo "Debian Detected..."
+  # Add check ind install $ISOPACKAGE
+fi
+
+
 # mkisofs -o $SCRIPT_PATH/images/$NEW_IMAGE_NAME.iso -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -V '$NEW_IMAGE_NAME' -boot-load-size 4 -boot-info-table -R -J -v -T $EXTRACT_ISO_FOLDER
 genisoimage -o $SCRIPT_PATH/images/$NEW_IMAGE_NAME.iso -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -V '$NEW_IMAGE_NAME' -boot-load-size 4 -boot-info-table -R -J -v -T $EXTRACT_ISO_FOLDER
 
